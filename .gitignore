@@ -1,4 +1,6 @@
 node_modules/
-.env
 uploads/
+.env
+target/
+Cargo.lock
 *.log 

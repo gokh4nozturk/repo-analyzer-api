@@ -1,44 +1,42 @@
-# Repo Analyzer API
+# Repo Analyzer API (Rust + Cloudflare Workers)
 
-This is the API service for the Repo Analyzer tool. It handles S3 uploads for repository analysis reports.
+This is a Rust implementation of the Repo Analyzer API service that handles file uploads to Cloudflare R2 storage, deployed as a Cloudflare Worker.
 
 ## Features
 
-- Secure file uploads to S3
-- Authentication via API key
-- Configurable S3 bucket and region
-- Automatic file cleanup
+- Health check endpoint
+- File upload to Cloudflare R2
+- API key authentication
+- CORS support
+- Environment variable configuration
+- WebAssembly (WASM) compilation for Cloudflare Workers
 
-## Setup
+## Requirements
+
+- Rust 1.70 or higher
+- wasm-pack
+- Cloudflare account with Workers and R2 enabled
+- Wrangler CLI
+
+## Development
+
+### Setup
 
 1. Clone the repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Copy the example environment file:
-   ```
-   cp .env.example .env
-   ```
-4. Edit the `.env` file with your AWS credentials and other settings
-5. Create the uploads directory:
-   ```
-   mkdir uploads
-   ```
+2. Install wasm-pack: `cargo install wasm-pack`
+3. Install Wrangler CLI: `npm install -g wrangler`
+4. Login to Cloudflare: `wrangler login`
+5. Build the project: `wasm-pack build --target web`
+6. Run the development server: `wrangler dev`
 
-## Running the API
+### Environment Variables
 
-### Development
-
-```
-npm run dev
-```
-
-### Production
-
-```
-npm start
-```
+- `PORT`: The port to run the server on (default: 3000)
+- `AWS_REGION`: AWS region (default: eu-central-1)
+- `AWS_S3_BUCKET`: S3 bucket name (default: repo-analyzer)
+- `API_KEY`: API key for authentication
+- `NODE_ENV`: Environment (development/production)
+- `R2_DOMAIN`: Custom domain for R2 bucket (optional)
 
 ## API Endpoints
 
@@ -48,7 +46,7 @@ npm start
 GET /health
 ```
 
-Returns a 200 OK response if the API is running.
+Returns a 200 OK response with a JSON body: `{"status": "ok"}`.
 
 ### Upload File
 
@@ -57,18 +55,20 @@ POST /upload
 ```
 
 Headers:
-- `x-api-key`: Your API key (required in production)
+- `x-api-key`: API key for authentication (not required in development mode)
 
 Form data:
-- `file`: The file to upload (required)
-- `bucket`: S3 bucket name (optional, defaults to env variable)
-- `key`: S3 object key (optional, generated if not provided)
-- `region`: AWS region (optional, defaults to env variable)
+- `file`: The file to upload
+
+Query parameters (optional):
+- `bucket`: S3 bucket name (overrides environment variable)
+- `region`: AWS region (overrides environment variable)
+- `key`: Custom S3 key for the file
 
 Response:
 ```json
 {
-  "url": "https://bucket-name.s3.region.amazonaws.com/key",
+  "url": "https://bucket-name.r2.cloudflarestorage.com/key",
   "bucket": "bucket-name",
   "key": "key",
   "region": "region"
@@ -77,23 +77,18 @@ Response:
 
 ## Deployment
 
-The API can be deployed to any Node.js hosting service like:
+Deploy to Cloudflare Workers:
 
-- AWS Elastic Beanstalk
-- Heroku
-- Digital Ocean App Platform
-- Vercel
-- Render
+```bash
+wrangler publish
+```
 
-Make sure to set all the required environment variables in your hosting provider's dashboard.
+For production deployment:
 
-## Security
-
-- API key authentication is enforced in production mode
-- File size is limited to 10MB
-- Temporary files are automatically cleaned up after upload
-- CORS is enabled for all origins (you may want to restrict this in production)
+```bash
+wrangler publish --env production
+```
 
 ## License
 
-MIT 
+MIT

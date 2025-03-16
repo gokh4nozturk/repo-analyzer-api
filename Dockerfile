@@ -1,19 +1,19 @@
-FROM node:18-alpine
+FROM rust:1.70 as builder
 
-WORKDIR /app
-
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm ci --only=production
-
-# Copy application code
+WORKDIR /usr/src/app
 COPY . .
 
-# Create uploads directory
-RUN mkdir -p uploads
+RUN cargo build --release
 
-# Expose the port
+FROM debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/local/bin
+
+COPY --from=builder /usr/src/app/target/release/repo-analyzer-api .
+COPY .env.example .env
+
 EXPOSE 3000
 
-# Start the application
-CMD ["node", "index.js"] 
+CMD ["./repo-analyzer-api"] 
