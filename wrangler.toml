@@ -9,7 +9,7 @@ AWS_S3_BUCKET = "repo-analyzer"
 
 [env.production]
 routes = [
-  { pattern = "api.repo-analyzer.example.com", custom_domain = true }
+  { pattern = "api.analyzer.gokhanozturk.io", custom_domain = true }
 ]
 
 [env.production.vars]
