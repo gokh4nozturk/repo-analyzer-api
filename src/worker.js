@@ -9,7 +9,7 @@ async function handleRequest(request) {
     const url = request.url;
     const urlParts = url.split('?');
     const path = urlParts[0].split('/').slice(3).join('/');
-    const fullPath = '/' + path;
+    const fullPath = `/${path}`;
     
     console.log(`Request received for path: ${fullPath}`);
     
@@ -33,9 +33,60 @@ async function handleRequest(request) {
       // Mock response for analyze endpoint
       return jsonResponse(202, {
         status: "queued",
-        job_id: "mock-job-id-" + Date.now(),
+        job_id: `mock-job-id-${Date.now()}`,
         message: "Analysis has been queued"
       });
+    }
+    
+    if (fullPath === '/api/upload') {
+      if (request.method !== 'POST') {
+        return jsonResponse(405, {
+          status: "error",
+          message: "Method not allowed. Use POST."
+        });
+      }
+      
+      try {
+        // Parse the request as multipart form data
+        const formData = await request.formData();
+        
+        // Get the file from the form data
+        const file = formData.get('file');
+        if (!file) {
+          return jsonResponse(400, {
+            status: "error",
+            message: "No file provided"
+          });
+        }
+        
+        // Generate a unique filename with timestamp
+        const timestamp = Date.now();
+        const originalName = file.name || 'report.json';
+        const key = `reports/${timestamp}-${originalName}`;
+        
+        // Upload the file to R2
+        const arrayBuffer = await file.arrayBuffer();
+        await STORAGE.put(key, arrayBuffer, {
+          httpMetadata: {
+            contentType: file.type || 'application/json'
+          }
+        });
+        
+        // Generate a public URL for the uploaded file
+        const publicUrl = `https://api.analyzer.gokhanozturk.io/${key}`;
+        
+        return jsonResponse(200, {
+          status: "success",
+          url: publicUrl,
+          message: "File uploaded successfully"
+        });
+      } catch (error) {
+        console.error('Upload error:', error);
+        return jsonResponse(500, {
+          status: "error",
+          message: `Failed to upload file: ${error.message}`
+        });
+      }
     }
     
     if (fullPath === '/api/status') {
@@ -68,6 +119,38 @@ async function handleRequest(request) {
       });
     }
     
+    // Handle file serving from R2
+    if (fullPath.startsWith('/reports/')) {
+      const key = fullPath.substring(1); // Remove leading slash
+      
+      try {
+        // Get the file from R2
+        const object = await STORAGE.get(key);
+        
+        if (object === null) {
+          return jsonResponse(404, {
+            status: "error",
+            message: "File not found"
+          });
+        }
+        
+        // Return the file with appropriate headers
+        const headers = new Headers();
+        object.writeHttpMetadata(headers);
+        headers.set('etag', object.httpEtag);
+        
+        return new Response(object.body, {
+          headers
+        });
+      } catch (error) {
+        console.error('Error serving file:', error);
+        return jsonResponse(500, {
+          status: "error",
+          message: `Failed to serve file: ${error.message}`
+        });
+      }
+    }
+    
     // Not found
     return jsonResponse(404, {
       status: "error",
@@ -90,7 +173,7 @@ function jsonResponse(status, data) {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key'
     }
   });
 }

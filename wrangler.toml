@@ -14,14 +14,23 @@ routes = [
 
 [env.production.vars]
 NODE_ENV = "production"
+AWS_REGION = "eu-central-1"
+AWS_S3_BUCKET = "repo-analyzer"
 
 [env.development]
 workers_dev = true
 
 [env.development.vars]
 NODE_ENV = "development"
+AWS_REGION = "eu-central-1"
+AWS_S3_BUCKET = "repo-analyzer"
 
 [[r2_buckets]]
 binding = "STORAGE"
 bucket_name = "repo-analyzer"
-preview_bucket_name = "repo-analyzer-dev" 
+preview_bucket_name = "repo-analyzer-dev"
+
+# Also add R2 buckets to production environment
+[[env.production.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "repo-analyzer" 
