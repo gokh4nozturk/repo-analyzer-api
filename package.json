@@ -1,0 +1,15 @@
+{
+  "name": "repo-analyzer-api",
+  "version": "0.1.0",
+  "description": "Repository Analyzer API",
+  "main": "src/worker.js",
+  "scripts": {
+    "build": "wrangler build",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "wrangler": "^4.0.0"
+  }
+} 

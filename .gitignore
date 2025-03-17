@@ -4,3 +4,5 @@ uploads/
 target/
 Cargo.lock
 *.log 
+.wrangler/
+build/
