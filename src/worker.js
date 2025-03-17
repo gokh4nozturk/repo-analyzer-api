@@ -1,11 +1,22 @@
-import { Repo_Analyzer_Api } from '../build/repo-analyzer-api.js';
+import { fetch } from '../build/repo_analyzer_api.js';
 
-export default {
-  async fetch(request, env, ctx) {
-    // Initialize the Rust WASM module
-    const instance = new Repo_Analyzer_Api();
-    
-    // Handle the request using the Rust module
-    return instance.handle_request(request, env);
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request));
+});
+
+async function handleRequest(request) {
+  try {
+    return await fetch(request);
+  } catch (e) {
+    console.error('Error in worker:', e);
+    return new Response(JSON.stringify({
+      error: 'Internal Server Error',
+      message: e.message
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   }
-};
+}

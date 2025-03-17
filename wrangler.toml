@@ -27,4 +27,4 @@ bucket_name = "repo-analyzer"
 preview_bucket_name = "repo-analyzer-dev"
 
 [build]
-command = "cargo build --release --target wasm32-wasi && wasm-bindgen target/wasm32-wasi/release/repo-analyzer-api.wasm --out-dir ./build"
+command = "cargo build --release --target wasm32-unknown-unknown && wasm-bindgen target/wasm32-unknown-unknown/release/repo_analyzer_api.wasm --out-dir ./build --target web" 
