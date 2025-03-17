@@ -1,7 +1,9 @@
 name = "repo-analyzer-api"
 main = "src/worker.js"
-compatibility_date = "2023-12-01"
+compatibility_date = "2024-03-17"
+compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+version = "0.2.0"
 
 [vars]
 AWS_REGION = "eu-central-1"
